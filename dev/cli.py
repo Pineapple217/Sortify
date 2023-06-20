@@ -7,6 +7,10 @@ import os
 from pprint import pprint
 import csv
 import typer
+from typing import Optional
+from typing_extensions import Annotated
+import random
+from rich import print
 
 app = typer.Typer()
 
@@ -80,11 +84,27 @@ def export_liked():
 
 
 @app.command()
-def import_playlist(playlist_csv):
+def import_playlist(
+    playlist_csv,
+    random_order: Annotated[
+        bool,
+        typer.Option("--random", "-R", help="Shuffles the playlist into a random order."),
+    ] = False,
+):
+    # , "-R", help="Shuffels the playlist in a random order"
+    if not os.path.exists(playlist_csv):
+        print(f"file {playlist_csv} not found.")
+        raise typer.Exit(code=1)
     user_id = sp.me()["id"]
     playlist_id = sp.user_playlist_create(user_id, "AI_TEST1")
-    max_length = 100
-    id_list = pd.read_csv(playlist_csv)["id"]
+    max_length = 100 # 100 api limit for adding tracks
+    try:
+        id_list = pd.read_csv(playlist_csv)["id"]
+    except: 
+        print(f"file {playlist_csv} does not contain an id-column.")
+        raise typer.Exit(code=1)
+    if random_order:
+        random.shuffle(id_list)
 
     lists = [id_list[i : i + max_length] for i in range(0, len(id_list), max_length)]
     for ids in lists:
