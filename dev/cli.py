@@ -4,15 +4,14 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 import os
-from pprint import pprint
 import csv
 import typer
-from typing import Optional
 from typing_extensions import Annotated
 import random
 from rich import print
+from rich.progress import Progress
 
-app = typer.Typer()
+app = typer.Typer(no_args_is_help=True)
 
 
 def get_sp_client():
@@ -27,7 +26,11 @@ def get_sp_client():
             client_id=SPOTIFY_CLIENT_ID,
             client_secret=SPOTIFY_CLIENT_SECRET,
             redirect_uri=SPOTIFY_REDIRECT_URI,
-            scope="playlist-modify-public",
+            scope=[
+                "playlist-read-private",
+                "user-library-read",
+                "playlist-modify-public",
+            ],
         )
     )
     return sp
@@ -62,7 +65,7 @@ def export_liked():
 
     writer.writeheader()
 
-    def show_tracks(results):
+    def process_result(results):
         ids = [t["track"]["id"] for t in results["items"]]
         featueres = sp.audio_features(ids)
 
@@ -73,14 +76,20 @@ def export_liked():
                 d = dict((k, None) for k in fieldnames)
                 d["id"] = track_id
                 writer.writerow(d)
-        pprint(ids)
 
     results = sp.current_user_saved_tracks(limit=50)  # 50 is max
-    show_tracks(results)
+    with Progress() as progress:
+        task1 = progress.add_task("Pulling liked songs...", total=results["total"])
+        progress.console.print(
+            f"Found {results['total']} liked song{'' if results['total'] == 1 else 's'}"
+        )
 
-    while results["next"]:
-        results = sp.next(results)
-        show_tracks(results)
+        progress.update(task1, completed=results["offset"] + results["limit"])
+        process_result(results)
+        while results["next"]:
+            results = sp.next(results)
+            process_result(results)
+            progress.update(task1, completed=results["offset"] + results["limit"])
 
 
 @app.command()
@@ -88,7 +97,9 @@ def import_playlist(
     playlist_csv,
     random_order: Annotated[
         bool,
-        typer.Option("--random", "-R", help="Shuffles the playlist into a random order."),
+        typer.Option(
+            "--random", "-R", help="Shuffles the playlist into a random order."
+        ),
     ] = False,
 ):
     # , "-R", help="Shuffels the playlist in a random order"
@@ -97,10 +108,10 @@ def import_playlist(
         raise typer.Exit(code=1)
     user_id = sp.me()["id"]
     playlist_id = sp.user_playlist_create(user_id, "AI_TEST1")
-    max_length = 100 # 100 api limit for adding tracks
+    max_length = 100  # 100 api limit for adding tracks
     try:
         id_list = pd.read_csv(playlist_csv)["id"]
-    except: 
+    except:
         print(f"file {playlist_csv} does not contain an id-column.")
         raise typer.Exit(code=1)
     if random_order:
