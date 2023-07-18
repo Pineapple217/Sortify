@@ -166,7 +166,6 @@ def brich_playlist_gen(
             key=lambda x: os.path.getmtime(os.path.join(folder_path, x)), reverse=True
         )
         liked_csv = os.path.join(folder_path, csv_files[0])
-    # print(f"Using [italic white]{liked_csv}[/italic white] for playlist generation")
 
     with Progress(
         SpinnerColumn(),
@@ -221,12 +220,11 @@ def delete_playlists():
         )
     )
 
-    # pprint(list(playlists))
-    user_renderables = [
+    playlist_r = [
         Panel(f"{playlist['name']}\n{playlist['tracks']['total']}", expand=True)
         for playlist in playlists
     ]
-    print(Columns(user_renderables))
+    print(Columns(playlist_r))
     delete = typer.confirm("Are you sure you want to delete these playlists?")
     if not delete:
         print("Not deleting")
