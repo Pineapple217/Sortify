@@ -1,4 +1,5 @@
 from datetime import datetime
+from pprint import pprint
 import time
 import pandas as pd
 import spotipy
@@ -12,6 +13,8 @@ import random
 from rich import print
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.columns import Columns
+from rich.panel import Panel
 
 from ml import birch_cluster
 
@@ -198,6 +201,39 @@ def brich_playlist_gen(
                 sp.user_playlist_add_tracks(user_id, playlist["id"], ids)
 
         progress.update(task_playlist, completed=1)
+
+
+@app.command()
+def delete_playlists():
+    """
+    Deletes all AI generated playlists
+    """
+    PREFIX = "AI_"
+    result = sp.current_user_playlists()
+    playlists = result["items"]
+    while result["next"]:
+        result = sp.next(result)
+        playlists += result["items"]
+    playlists = list(
+        filter(
+            lambda x: PREFIX in x["name"],
+            playlists,
+        )
+    )
+
+    # pprint(list(playlists))
+    user_renderables = [
+        Panel(f"{playlist['name']}\n{playlist['tracks']['total']}", expand=True)
+        for playlist in playlists
+    ]
+    print(Columns(user_renderables))
+    delete = typer.confirm("Are you sure you want to delete these playlists?")
+    if not delete:
+        print("Not deleting")
+        raise typer.Abort()
+    for playlist in list(playlists):
+        print(f"Deleting {playlist['name']}")
+        sp.current_user_unfollow_playlist(playlist["id"])
 
 
 sp = get_sp_client()
