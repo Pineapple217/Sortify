@@ -138,7 +138,7 @@ def import_playlist(
 def brich_playlist_gen(
     liked_csv: Annotated[str, typer.Argument(resolve_path=True)] = "Most recent csv",
     playlist_count: Annotated[
-        int, typer.Option("-n", help="Amount of playlists to export.")
+        int, typer.Option("-n", help="Amount of playlists to export.", min=1)
     ] = 15,
     random_order: Annotated[
         bool,
@@ -152,20 +152,23 @@ def brich_playlist_gen(
     """
     if liked_csv == "Most recent csv":
         folder_path = "./csv"
-        csv_files = [
-            f
-            for f in os.listdir(folder_path)
-            if f.startswith("liked_") and f.endswith(".csv")
-        ]
-        if len(csv_files) == 0:
+        try:
+            csv_files = [
+                f
+                for f in os.listdir(folder_path)
+                if f.startswith("liked_") and f.endswith(".csv")
+            ]
+
+            csv_files.sort(
+                key=lambda x: os.path.getmtime(os.path.join(folder_path, x)),
+                reverse=True,
+            )
+            liked_csv = os.path.join(folder_path, csv_files[0])
+        except:
             err_console.print(
                 "[bold red]Alert![/bold red] No liked csv found, use the `export-liked` command to generate this file."
             )
             raise typer.Exit(code=1)
-        csv_files.sort(
-            key=lambda x: os.path.getmtime(os.path.join(folder_path, x)), reverse=True
-        )
-        liked_csv = os.path.join(folder_path, csv_files[0])
 
     with Progress(
         SpinnerColumn(),
