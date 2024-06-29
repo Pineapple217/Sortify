@@ -1,0 +1,104 @@
+package view
+
+import (
+	v "github.com/Pineapple217/Sortify/web/pkg/validate"
+)
+
+type LoginIndexPageData struct {
+	FormValues LoginFormValues
+	FormErrors v.Errors
+}
+
+type LoginFormValues struct {
+	Username string `form:"username"`
+	Password string `form:"password"`
+}
+
+templ LoginIndex(data LoginIndexPageData) {
+	@boiler() {
+		@LoginForm(data.FormValues, data.FormErrors)
+	}
+}
+
+templ LoginForm(values LoginFormValues, errors v.Errors) {
+	<form hx-post="/login">
+		<h1>Login</h1>
+		<label>
+			Username
+			<br/>
+			<input type="text" name="username" tabindex="1" value={ values.Username }/>
+		</label>
+		if errors.Has("username") {
+			<div class="error">{ errors.Get("username")[0] }</div>
+		} else {
+			<br/>
+		}
+		<label>
+			Password
+			<br/>
+			<input type="password" name="password" tabindex="2"/>
+		</label>
+		if errors.Has("password") {
+			<div class="error">{ errors.Get("password")[0] }</div>
+		}
+		if errors.Has("credentials") {
+			<div class="error">{ errors.Get("credentials")[0] }</div>
+		}
+		<br/>
+		<input type="submit" id="submit" tabindex="3"/>
+	</form>
+}
+
+type SignupIndexPageData struct {
+	FormValues SignupFormValues
+	FormErrors v.Errors
+}
+
+type SignupFormValues struct {
+	Username        string `form:"username"`
+	Password        string `form:"password"`
+	PasswordConfirm string `form:"password-confirm"`
+}
+
+templ SignupIndex(data SignupIndexPageData) {
+	@boiler() {
+		@SignupForm(data.FormValues, data.FormErrors)
+	}
+}
+
+templ SignupForm(values SignupFormValues, errors v.Errors) {
+	<form hx-post="/signup">
+		<h1>Signup</h1>
+		<label>
+			Username 
+			<br/>
+			<input type="text" name="username" tabindex="1" value={ values.Username }/>
+		</label>
+		if errors.Has("username") {
+			<div class="error">{ errors.Get("username")[0] }</div>
+		} else {
+			<br/>
+		}
+		<label>
+			Password
+			<br/>
+			<input type="password" name="password" tabindex="2"/>
+		</label>
+		<br/>
+		<label>
+			Confirm Password 
+			<br/>
+			<input type="password" name="password-confirm" tabindex="3"/>
+		</label>
+		if errors.Has("password") {
+			<ul>
+				for _, err := range errors.Get("password") {
+					<li class="error">{ err }</li>
+				}
+			</ul>
+		} else {
+			<br/>
+		}
+		<input type="submit" id="submit" tabindex="4"/>
+	</form>
+}

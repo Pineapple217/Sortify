@@ -1,6 +1,7 @@
 from datetime import datetime
 from pprint import pprint
 import time
+import re
 import pandas as pd
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -236,7 +237,86 @@ def delete_playlists():
         print(f"Deleting {playlist['name']}")
         sp.current_user_unfollow_playlist(playlist["id"])
 
+@app.command()
+def get_labelled_data():
+    """
+    Get the tabels out of spotify playlists 
+    """
+    playlists = []
+    pattern = r'\d+ - .*'
+    def process_result(results):
+        for result in results["items"]:
+            if re.match(pattern, result["name"]):
+                playlists.append(result)
 
+
+    sp.current_user_playlists()
+    results = sp.current_user_playlists(limit=50)  # 50 is max
+    with Progress() as progress:
+        task1 = progress.add_task("Pulling playlists...", total=results["total"])
+        progress.console.print(
+            f"Found {results['total']} playlist{'' if results['total'] == 1 else 's'}"
+        )
+
+        progress.update(task1, completed=results["offset"] + results["limit"])
+        process_result(results)
+        while results["next"]:
+            results = sp.next(results)
+            process_result(results)
+            progress.update(task1, completed=results["offset"] + results["limit"])
+
+    # pprint(sorted(playlists))
+    print(f"Matched {len(playlists)} playlists")
+
+
+    current_datetime = datetime.now()
+    formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
+    if not os.path.exists("csv"):
+        os.makedirs("csv")
+    filename = f"./csv/labelled_{formatted_datetime}.csv"
+    file = open(filename, mode="w", newline="")
+    fieldnames = [
+        "id",
+        "acousticness",
+        "danceability",
+        "speechiness",
+        "key",
+        "loudness",
+        "instrumentalness",
+        "valence",
+        "duration_ms",
+        "mode",
+        "energy",
+        "liveness",
+        "tempo",
+        "time_signature",
+    ]
+    writer = csv.DictWriter(file, fieldnames=fieldnames + ["playlist"])
+
+    writer.writeheader()
+
+    def process_result(results, playlist):
+        ids = [t["track"]["id"] for t in results["items"]]
+        featueres = sp.audio_features(ids)
+        for f, track_id in zip(featueres, ids):
+            try:
+                d = dict((k, f[k]) for k in fieldnames)
+                d["playlist"] = playlist
+                writer.writerow(d)
+            except:
+                d = dict((k, None) for k in fieldnames)
+                d["id"] = track_id
+                writer.writerow(d)
+
+    for playlist in playlists:
+        t = playlist["tracks"]["total"]
+        rr = []
+        results = sp.playlist_tracks(playlist["id"], limit=100)
+        process_result(results, playlist["name"])
+        while results["next"]:
+            results = sp.next(results)
+            process_result(results, playlist["name"])
+        pprint(f"Fetched {len(rr)}/{t} tracks from '{playlist['name']}'")
 sp = get_sp_client()
 
 if __name__ == "__main__":

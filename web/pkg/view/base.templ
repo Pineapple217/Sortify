@@ -1,0 +1,49 @@
+package view
+
+import (
+	s "github.com/Pineapple217/Sortify/web/pkg/static"
+	"github.com/Pineapple217/Sortify/web/pkg/auth"
+)
+
+templ boiler() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+			<link rel="stylesheet" href={ s.StaticMap["/static/css/main.css"] }/>
+			<script src="https://unpkg.com/htmx.org@2.0.0" integrity="sha384-wS5l5IKJBvK6sPTKa2WZ1js3d947pvWXbPJ1OmWfEuxLgeHcEbjUUA5i9V5ZkpCw" crossorigin="anonymous"></script>
+			<title>Sortify</title>
+		</head>
+		<header>
+			<h1>Sortify</h1>
+			<nav>
+				<a href="/">Home</a>
+				/
+				if !auth.GetAuth(ctx).LoggedIn {
+					<a href="/login">Login</a>
+					/
+					<a href="/signup">Signup</a>
+				} else {
+					{ auth.GetAuth(ctx).Username }
+					- 
+					<a href="#" hx-delete="/logout">logout</a>
+				}
+			</nav>
+		</header>
+		{ children... }
+	</html>
+}
+
+templ Home(user string) {
+	@boiler() {
+		<div>Hello :3</div>
+		<a hx-get="/spotify_auth">login spot</a>
+		<h4>{ user }</h4>
+	}
+}
+
+templ Redirect() {
+	@boiler()
+}
