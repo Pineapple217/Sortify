@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/Pineapple217/Sortify/web/pkg/auth"
 	"github.com/Pineapple217/Sortify/web/pkg/database"
 	"github.com/Pineapple217/Sortify/web/pkg/util"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -14,11 +13,6 @@ import (
 )
 
 func (h *Handler) SpotifyAuthCallback(c echo.Context) error {
-	auth := auth.GetAuth(c.Request().Context())
-	if !auth.Check() {
-		return c.NoContent(http.StatusForbidden)
-	}
-
 	sess, err := session.Get("session", c)
 	if err != nil {
 		return err
@@ -55,11 +49,6 @@ func (h *Handler) SpotifyAuthCallback(c echo.Context) error {
 }
 
 func (h *Handler) SpotifyLoginUrl(c echo.Context) error {
-	auth := auth.GetAuth(c.Request().Context())
-	if !auth.Check() {
-		return c.NoContent(http.StatusForbidden)
-	}
-
 	r := util.RandomString(16)
 
 	sess, err := session.Get("session", c)
@@ -72,6 +61,5 @@ func (h *Handler) SpotifyLoginUrl(c echo.Context) error {
 		return err
 	}
 
-	c.Response().Header().Set("HX-Redirect", h.SpotifyAuth.AuthURL(r))
-	return c.NoContent(http.StatusOK)
+	return redirect(c, http.StatusOK, h.SpotifyAuth.AuthURL(r))
 }

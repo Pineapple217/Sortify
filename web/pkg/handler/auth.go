@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Pineapple217/Sortify/web/pkg/auth"
 	"github.com/Pineapple217/Sortify/web/pkg/database"
 	v "github.com/Pineapple217/Sortify/web/pkg/validate"
 	"github.com/Pineapple217/Sortify/web/pkg/view"
@@ -26,18 +25,10 @@ var authSchema = v.Schema{
 }
 
 func (h *Handler) LoginIndex(c echo.Context) error {
-	// If user is logged in, redirect, TODO: should be a middleware
-	if auth.GetAuth(c.Request().Context()).Check() {
-		return c.Redirect(http.StatusSeeOther, "/")
-	}
 	return render(c, view.LoginIndex(view.LoginIndexPageData{}))
 }
 
 func (h *Handler) LoginUser(c echo.Context) error {
-	// If user is logged in, redirect
-	if auth.GetAuth(c.Request().Context()).Check() {
-		return c.Redirect(http.StatusSeeOther, "/")
-	}
 
 	var values view.LoginFormValues
 	errors, ok := v.Request(c.Request(), &values, authSchema)
@@ -96,19 +87,10 @@ var signupSchema = v.Schema{
 }
 
 func (h *Handler) SignupForm(c echo.Context) error {
-	// If user is logged in, redirect
-	if auth.GetAuth(c.Request().Context()).Check() {
-		return c.Redirect(http.StatusSeeOther, "/")
-	}
 	return render(c, view.SignupIndex(view.SignupIndexPageData{}))
 }
 
 func (h *Handler) SignupUser(c echo.Context) error {
-	// If user is logged in, redirect
-	if auth.GetAuth(c.Request().Context()).Check() {
-		return c.Redirect(http.StatusSeeOther, "/")
-	}
-
 	var values view.SignupFormValues
 	form_errors, ok := v.Request(c.Request(), &values, signupSchema)
 	if !ok {
@@ -159,11 +141,6 @@ func (h *Handler) SignupUser(c echo.Context) error {
 }
 
 func (h *Handler) LogoutUser(c echo.Context) error {
-	// If user isn't logged in, redirect
-	if !auth.GetAuth(c.Request().Context()).Check() {
-		return c.Redirect(http.StatusSeeOther, "/")
-	}
-
 	sess, err := session.Get("session", c)
 	if err != nil {
 		return err

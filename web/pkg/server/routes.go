@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/Pineapple217/Sortify/web/pkg/auth"
 	"github.com/Pineapple217/Sortify/web/pkg/handler"
 	"github.com/Pineapple217/Sortify/web/pkg/static"
 	"github.com/labstack/echo/v4"
@@ -18,15 +19,19 @@ func (server *Server) RegisterRoutes(hdlr *handler.Handler) {
 	})
 	s.StaticFS("/", echo.MustSubFS(static.PublicFS, "public"))
 
+	IsAuth := e.Group("", auth.CheckAuthMiddleware)
+	IsSpotAuth := e.Group("", auth.CheckSpotifyAuthMiddleware)
+	_ = IsSpotAuth
+
 	e.GET("/", hdlr.Home)
-	e.GET("/callback", hdlr.SpotifyAuthCallback)
-	e.GET("/spotify_auth", hdlr.SpotifyLoginUrl)
+	IsAuth.GET("/callback", hdlr.SpotifyAuthCallback)
+	IsAuth.GET("/spotify_auth", hdlr.SpotifyLoginUrl)
 
-	e.GET("/login", hdlr.LoginIndex)
-	e.POST("/login", hdlr.LoginUser)
-	// TODO: should be delete
-	e.DELETE("/logout", hdlr.LogoutUser)
+	noAuth := e.Group("", auth.CheckNotAuthMiddleware)
+	noAuth.GET("/login", hdlr.LoginIndex)
+	noAuth.POST("/login", hdlr.LoginUser)
+	noAuth.DELETE("/logout", hdlr.LogoutUser)
 
-	e.GET("/signup", hdlr.SignupForm)
-	e.POST("/signup", hdlr.SignupUser)
+	noAuth.GET("/signup", hdlr.SignupForm)
+	noAuth.POST("/signup", hdlr.SignupUser)
 }
