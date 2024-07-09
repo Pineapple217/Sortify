@@ -8,6 +8,22 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Playlist struct {
+	ID        int64
+	Title     string
+	UserID    int64
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	DeletedAt pgtype.Timestamptz
+}
+
+type PlaylistTrack struct {
+	ID         int64
+	PlaylistID int64
+	TrackID    int64
+	AddedAt    pgtype.Timestamptz
+}
+
 type Session struct {
 	ID                  int64
 	UserID              int64
@@ -20,6 +36,23 @@ type Session struct {
 	SpotifyAccessToken  pgtype.Text
 	SpotifyRefreshToken pgtype.Text
 	SpotifyExpiry       pgtype.Timestamptz
+}
+
+type Track struct {
+	ID           int64
+	Title        string
+	Artist       string
+	ImgSmallUrl  pgtype.Text
+	ImgMediumUrl pgtype.Text
+	ImgLargeUrl  pgtype.Text
+	ReleaseDate  pgtype.Date
+	SpotifyID    string
+	DurationMs   int32
+	PreviewUrl   pgtype.Text
+	Popularity   int16
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+	DeletedAt    pgtype.Timestamptz
 }
 
 type User struct {

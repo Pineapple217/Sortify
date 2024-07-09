@@ -28,10 +28,17 @@ func (server *Server) RegisterRoutes(hdlr *handler.Handler) {
 	IsAuth.GET("/spotify_auth", hdlr.SpotifyLoginUrl)
 
 	noAuth := e.Group("", auth.CheckNotAuthMiddleware)
+
 	noAuth.GET("/login", hdlr.LoginIndex)
 	noAuth.POST("/login", hdlr.LoginUser)
-	noAuth.DELETE("/logout", hdlr.LogoutUser)
+	IsAuth.DELETE("/logout", hdlr.LogoutUser)
 
 	noAuth.GET("/signup", hdlr.SignupForm)
 	noAuth.POST("/signup", hdlr.SignupUser)
+
+	IsSpotAuth.GET("/playlist/pull", hdlr.PullLiked)
+	IsAuth.GET("/playlist", hdlr.PlaylistsIndex)
+
+	IsAuth.GET("/playlist/:id", hdlr.PlaylistIndex)
+	IsAuth.GET("/playlist/:id/tracks", hdlr.PlaylistTracks)
 }

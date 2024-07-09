@@ -21,6 +21,8 @@ templ boiler() {
 			<nav>
 				<a href="/">Home</a>
 				/
+				<a href="/playlist">Playlists</a>
+				/
 				if !auth.GetAuth(ctx).LoggedIn {
 					<a href="/login">Login</a>
 					/

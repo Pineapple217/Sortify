@@ -47,7 +47,11 @@ func main() {
 
 	auth := spotifyauth.New(
 		spotifyauth.WithRedirectURL(redirectURI),
-		spotifyauth.WithScopes(spotifyauth.ScopeUserReadPrivate),
+		spotifyauth.WithScopes(
+			spotifyauth.ScopeUserReadPrivate,
+			spotifyauth.ScopePlaylistReadPrivate,
+			spotifyauth.ScopeUserLibraryRead,
+		),
 	)
 
 	h := handler.NewHandler(db, auth)
