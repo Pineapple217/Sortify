@@ -13,6 +13,7 @@ templ boiler() {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 			<link rel="stylesheet" href={ s.StaticMap["/static/css/main.css"] }/>
+			<script type="module" src={ s.StaticMap["/static/js/lit.js"] }></script>
 			<script src="https://unpkg.com/htmx.org@2.0.0" integrity="sha384-wS5l5IKJBvK6sPTKa2WZ1js3d947pvWXbPJ1OmWfEuxLgeHcEbjUUA5i9V5ZkpCw" crossorigin="anonymous"></script>
 			<title>Sortify</title>
 		</head>
@@ -34,6 +35,7 @@ templ boiler() {
 				}
 			</nav>
 		</header>
+		// <my-element></my-element>
 		{ children... }
 	</html>
 }
