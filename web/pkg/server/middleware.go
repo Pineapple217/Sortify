@@ -3,16 +3,16 @@ package server
 import (
 	"log/slog"
 
+	"github.com/Pineapple217/Sortify/web/ent"
 	"github.com/Pineapple217/Sortify/web/pkg/auth"
 	"github.com/Pineapple217/Sortify/web/pkg/config"
-	"github.com/Pineapple217/Sortify/web/pkg/database"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	echoMw "github.com/labstack/echo/v4/middleware"
 )
 
-func (s *Server) ApplyMiddleware(cnf config.Configs, reRoutes map[string]string, db *database.Queries) {
+func (s *Server) ApplyMiddleware(cnf config.Configs, reRoutes map[string]string, db *ent.Client) {
 	s.e.Pre(echoMw.Rewrite(reRoutes))
 	s.e.Use(echoMw.RequestLoggerWithConfig(echoMw.RequestLoggerConfig{
 		LogStatus:  true,

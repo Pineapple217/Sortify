@@ -12,7 +12,7 @@ DOCKER_TAG ?= latest
 # 	@make --no-print-directory docker-push
 
 codegen:
-	sqlc generate
+	go generate ./ent
 	templ generate
 
 build:

@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Pineapple217/Sortify/web/pkg/database"
+	"github.com/Pineapple217/Sortify/web/ent"
+	DBSession "github.com/Pineapple217/Sortify/web/ent/session"
+	"github.com/Pineapple217/Sortify/web/ent/user"
 	v "github.com/Pineapple217/Sortify/web/pkg/validate"
 	"github.com/Pineapple217/Sortify/web/pkg/view"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -35,8 +36,9 @@ func (h *Handler) LoginUser(c echo.Context) error {
 	if !ok {
 		return render(c, view.LoginForm(values, errors))
 	}
-
-	user, err := h.DB.GetUser(c.Request().Context(), values.Username)
+	user, err := h.DB.User.Query().
+		Where(user.Username(values.Username)).
+		Only(c.Request().Context())
 	if err != nil {
 		errors.Add("credentials", "invalid credentials")
 		return render(c, view.LoginForm(values, errors))
@@ -48,16 +50,13 @@ func (h *Handler) LoginUser(c echo.Context) error {
 		return render(c, view.LoginForm(values, errors))
 	}
 
-	s, err := h.DB.CreateSession(c.Request().Context(), database.CreateSessionParams{
-		UserID: user.ID,
-		Token:  uuid.New().String(),
-		ExpiresAt: pgtype.Timestamptz{
-			Time:  time.Now().Add(time.Hour * time.Duration(sessionExpiry)),
-			Valid: true,
-		},
-		IpAddress: pgtype.Text{String: c.RealIP(), Valid: true},
-		UserAgent: pgtype.Text{String: c.Request().UserAgent(), Valid: true},
-	})
+	s, err := h.DB.Session.Create().
+		SetUserID(user.ID).
+		SetToken(uuid.New().String()).
+		SetExpiresAt(time.Now().Add(time.Hour * time.Duration(sessionExpiry))).
+		SetIPAddress(c.RealIP()).
+		SetUserAgent(c.Request().UserAgent()).
+		Save(c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -112,16 +111,13 @@ func (h *Handler) SignupUser(c echo.Context) error {
 		return err
 	}
 
-	s, err := h.DB.CreateSession(c.Request().Context(), database.CreateSessionParams{
-		UserID: user.ID,
-		Token:  uuid.New().String(),
-		ExpiresAt: pgtype.Timestamptz{
-			Time:  time.Now().Add(time.Hour * time.Duration(sessionExpiry)),
-			Valid: true,
-		},
-		IpAddress: pgtype.Text{String: c.RealIP(), Valid: true},
-		UserAgent: pgtype.Text{String: c.Request().UserAgent(), Valid: true},
-	})
+	s, err := h.DB.Session.Create().
+		SetUserID(user.ID).
+		SetToken(uuid.New().String()).
+		SetExpiresAt(time.Now().Add(time.Hour * time.Duration(sessionExpiry))).
+		SetIPAddress(c.RealIP()).
+		SetUserAgent(c.Request().UserAgent()).
+		Save(c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -152,7 +148,9 @@ func (h *Handler) LogoutUser(c echo.Context) error {
 		sess.Save(c.Request(), c.Response())
 	}()
 
-	err = h.DB.DeleteSessionByToken(c.Request().Context(), sess.Values["sessionToken"].(string))
+	_, err = h.DB.Session.Delete().
+		Where(DBSession.Token(sess.Values["sessionToken"].(string))).
+		Exec(c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -161,16 +159,16 @@ func (h *Handler) LogoutUser(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func createUserFromFormValues(ctx context.Context, db *database.Queries, values view.SignupFormValues) (database.User, error) {
+func createUserFromFormValues(ctx context.Context, db *ent.Client, values view.SignupFormValues) (*ent.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(values.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return database.User{}, err
+		return nil, err
 	}
+	user, err := db.User.Create().
+		SetUsername(values.Username).
+		SetPasswordHash(string(hash)).
+		Save(ctx)
 
-	user, err := db.CreateUser(ctx, database.CreateUserParams{
-		Username:     values.Username,
-		PasswordHash: string(hash),
-	})
 	if err != nil {
 		return user, err
 	}

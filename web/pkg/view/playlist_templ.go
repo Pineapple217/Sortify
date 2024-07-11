@@ -9,11 +9,11 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/Pineapple217/Sortify/web/pkg/database"
+	"github.com/Pineapple217/Sortify/web/ent"
 	"strconv"
 )
 
-func PlaylistIndex(pls []database.Playlist) templ.Component {
+func PlaylistIndex(pls []*ent.Playlist) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -66,9 +66,9 @@ func PlaylistIndex(pls []database.Playlist) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var4 string
-				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(pl.Title)
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(pl.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/view/playlist.templ`, Line: 21, Col: 19}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/view/playlist.templ`, Line: 21, Col: 18}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -79,9 +79,9 @@ func PlaylistIndex(pls []database.Playlist) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var5 string
-				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(pl.CreatedAt.Time.Format("2006-02-01 15:04:05"))
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(pl.CreatedAt.Format("2006-02-01 15:04:05"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/view/playlist.templ`, Line: 22, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/view/playlist.templ`, Line: 22, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -91,7 +91,7 @@ func PlaylistIndex(pls []database.Playlist) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var6 templ.SafeURL = templ.URL("/playlist/" + strconv.FormatInt(pl.ID, 10))
+				var templ_7745c5c3_Var6 templ.SafeURL = templ.URL("/playlist/" + strconv.FormatInt(int64(pl.ID), 10))
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var6)))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -115,7 +115,7 @@ func PlaylistIndex(pls []database.Playlist) templ.Component {
 	})
 }
 
-func Playlist(playlist database.Playlist) templ.Component {
+func Playlist(playlist *ent.Playlist) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -150,9 +150,9 @@ func Playlist(playlist database.Playlist) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(playlist.Title)
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(playlist.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/view/playlist.templ`, Line: 32, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/view/playlist.templ`, Line: 32, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -163,9 +163,9 @@ func Playlist(playlist database.Playlist) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs("/playlist/" + strconv.FormatInt(playlist.ID, 10) + "/tracks?offset=0&limit=100")
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs("/playlist/" + strconv.FormatInt(int64(playlist.ID), 10) + "/tracks?offset=0&limit=100")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/view/playlist.templ`, Line: 33, Col: 96}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/view/playlist.templ`, Line: 33, Col: 103}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -186,7 +186,7 @@ func Playlist(playlist database.Playlist) templ.Component {
 }
 
 type PlaylistTracksData struct {
-	Tracks []database.Track
+	Tracks []*ent.Track
 	Offset int
 	Limit  int
 }
@@ -232,9 +232,9 @@ func PlaylistTracks(data PlaylistTracksData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(t.Title)
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(t.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/view/playlist.templ`, Line: 53, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pkg/view/playlist.templ`, Line: 53, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {

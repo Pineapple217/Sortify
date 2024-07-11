@@ -5,9 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/Pineapple217/Sortify/web/pkg/database"
+	DBSession "github.com/Pineapple217/Sortify/web/ent/session"
 	"github.com/Pineapple217/Sortify/web/pkg/util"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 )
@@ -36,12 +35,12 @@ func (h *Handler) SpotifyAuthCallback(c echo.Context) error {
 		return errors.New("session token is not a string")
 	}
 
-	err = h.DB.SessionAddSotify(c.Request().Context(), database.SessionAddSotifyParams{
-		Token:               st,
-		SpotifyAccessToken:  pgtype.Text{String: tok.AccessToken, Valid: true},
-		SpotifyRefreshToken: pgtype.Text{String: tok.AccessToken, Valid: true},
-		SpotifyExpiry:       pgtype.Timestamptz{Time: tok.Expiry, Valid: true},
-	})
+	_, err = h.DB.Session.Update().
+		Where(DBSession.Token(st)).
+		SetSpotifyAccessToken(tok.AccessToken).
+		SetSpotifyRefreshToken(tok.RefreshToken).
+		SetSpotifyExpiry(tok.Expiry).
+		Save(c.Request().Context())
 	if err != nil {
 		return err
 	}

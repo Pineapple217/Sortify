@@ -43,7 +43,8 @@ func main() {
 
 	rr := static.HashPublicFS()
 
-	db := database.NewQueries(cnf.Database)
+	db := database.NewClient(cnf.Database)
+	defer db.Close()
 
 	auth := spotifyauth.New(
 		spotifyauth.WithRedirectURL(redirectURI),

@@ -1,11 +1,11 @@
 package view
 
 import (
-	"github.com/Pineapple217/Sortify/web/pkg/database"
+	"github.com/Pineapple217/Sortify/web/ent"
 	"strconv"
 )
 
-templ PlaylistIndex(pls []database.Playlist) {
+templ PlaylistIndex(pls []*ent.Playlist) {
 	@boiler() {
 		<h1>Playlists</h1>
 		<table>
@@ -18,24 +18,24 @@ templ PlaylistIndex(pls []database.Playlist) {
 			for i, pl := range pls {
 				<tr>
 					<td>{ strconv.Itoa(i + 1) }</td>
-					<td>{ pl.Title }</td>
-					<td>{ pl.CreatedAt.Time.Format("2006-02-01 15:04:05") }</td>
-					<td><a href={ templ.URL("/playlist/" + strconv.FormatInt(pl.ID, 10)) }>View</a></td>
+					<td>{ pl.Name }</td>
+					<td>{ pl.CreatedAt.Format("2006-02-01 15:04:05") }</td>
+					<td><a href={ templ.URL("/playlist/" + strconv.FormatInt(int64(pl.ID), 10)) }>View</a></td>
 				</tr>
 			}
 		</table>
 	}
 }
 
-templ Playlist(playlist database.Playlist) {
+templ Playlist(playlist *ent.Playlist) {
 	@boiler() {
-		<h1>{ playlist.Title }</h1>
-		<div hx-get={ "/playlist/" + strconv.FormatInt(playlist.ID, 10) + "/tracks?offset=0&limit=100" } hx-trigger="load"></div>
+		<h1>{ playlist.Name }</h1>
+		<div hx-get={ "/playlist/" + strconv.FormatInt(int64(playlist.ID), 10) + "/tracks?offset=0&limit=100" } hx-trigger="load"></div>
 	}
 }
 
 type PlaylistTracksData struct {
-	Tracks []database.Track
+	Tracks []*ent.Track
 	Offset int
 	Limit  int
 }
@@ -50,7 +50,7 @@ templ PlaylistTracks(data PlaylistTracksData) {
 		for i, t := range data.Tracks {
 			<tr>
 				<td>{ strconv.Itoa(i + 1 + data.Offset) }</td>
-				<td>{ t.Title }</td>
+				<td>{ t.Name }</td>
 				<td>{ t.Artist }</td>
 			</tr>
 		}

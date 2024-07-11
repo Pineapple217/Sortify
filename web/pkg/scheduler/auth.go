@@ -3,13 +3,17 @@ package scheduler
 import (
 	"context"
 	"log/slog"
+	"time"
 
-	"github.com/Pineapple217/Sortify/web/pkg/database"
+	"github.com/Pineapple217/Sortify/web/ent"
+	"github.com/Pineapple217/Sortify/web/ent/session"
 )
 
-func SessionCleanup(ctx context.Context, db *database.Queries) {
+func SessionCleanup(ctx context.Context, db *ent.Client) {
 	slog.Debug("deleting expired sessions")
-	err := db.DeleteOldSessions(ctx)
+	_, err := db.Session.Delete().
+		Where(session.ExpiresAtLT(time.Now())).
+		Exec(ctx)
 	if err != nil {
 		slog.Warn("failed to delete expired sessions", "error", err)
 	}

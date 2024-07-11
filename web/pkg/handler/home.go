@@ -16,5 +16,7 @@ func (h *Handler) Home(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return render(c, view.Home(user.DisplayName))
+	username := user.DisplayName
+
+	return render(c, view.Home(username))
 }

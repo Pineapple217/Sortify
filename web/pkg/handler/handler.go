@@ -1,18 +1,18 @@
 package handler
 
 import (
-	"github.com/Pineapple217/Sortify/web/pkg/database"
+	"github.com/Pineapple217/Sortify/web/ent"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 )
 
 type Handler struct {
-	DB          *database.Queries
+	DB          *ent.Client
 	SpotifyAuth *spotifyauth.Authenticator
 }
 
-func NewHandler(db *database.Queries, sp *spotifyauth.Authenticator) *Handler {
+func NewHandler(client *ent.Client, sp *spotifyauth.Authenticator) *Handler {
 	return &Handler{
-		DB:          db,
+		DB:          client,
 		SpotifyAuth: sp,
 	}
 }
