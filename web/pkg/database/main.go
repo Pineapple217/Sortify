@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	_ "embed"
-
 	"entgo.io/ent/dialect"
+	_ "github.com/Pineapple217/Sortify/web/ent/runtime"
 
 	"github.com/Pineapple217/Sortify/web/ent"
 	"github.com/Pineapple217/Sortify/web/pkg/config"

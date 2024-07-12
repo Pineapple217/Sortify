@@ -40,5 +40,6 @@ func (server *Server) RegisterRoutes(hdlr *handler.Handler) {
 	IsAuth.GET("/playlist", hdlr.PlaylistsIndex)
 
 	IsAuth.GET("/playlist/:id", hdlr.PlaylistIndex)
+	IsAuth.DELETE("/playlist/:id", hdlr.PlaylistDelete)
 	IsAuth.GET("/playlist/:id/tracks", hdlr.PlaylistTracks)
 }

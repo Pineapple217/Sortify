@@ -84,7 +84,7 @@ func AuthMiddleware(db *ent.Client) echo.MiddlewareFunc {
 						panic(err)
 					}
 					a.LoggedIn = true
-					a.UserID = int64(s.ID)
+					a.UserID = int64(s.Edges.User.ID)
 					a.Username = s.Edges.User.Username
 					if s.SpotifyAccessToken != nil {
 						tok := oauth2.Token{

@@ -42,6 +42,22 @@ func (h *Handler) PlaylistIndex(c echo.Context) error {
 	return render(c, view.Playlist(playlist))
 }
 
+func (h *Handler) PlaylistDelete(c echo.Context) error {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.NoContent(http.StatusBadRequest)
+	}
+	err = h.DB.Playlist.DeleteOneID(int(id)).Exec(c.Request().Context())
+	if ent.IsNotFound(err) {
+		return c.NoContent(http.StatusNoContent)
+	}
+	if err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "")
+}
+
 func (h *Handler) PlaylistTracks(c echo.Context) error {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)

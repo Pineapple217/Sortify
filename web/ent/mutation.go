@@ -39,10 +39,10 @@ type PlaylistMutation struct {
 	op            Op
 	typ           string
 	id            *int
+	deleted_at    *time.Time
 	name          *string
 	created_at    *time.Time
 	updated_at    *time.Time
-	deleted_at    *time.Time
 	clearedFields map[string]struct{}
 	user          *int
 	cleareduser   bool
@@ -152,6 +152,55 @@ func (m *PlaylistMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (m *PlaylistMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *PlaylistMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Playlist entity.
+// If the Playlist object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlaylistMutation) OldDeletedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *PlaylistMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[playlist.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *PlaylistMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[playlist.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *PlaylistMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, playlist.FieldDeletedAt)
+}
+
 // SetName sets the "name" field.
 func (m *PlaylistMutation) SetName(s string) {
 	m.name = &s
@@ -258,55 +307,6 @@ func (m *PlaylistMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err e
 // ResetUpdatedAt resets all changes to the "updated_at" field.
 func (m *PlaylistMutation) ResetUpdatedAt() {
 	m.updated_at = nil
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (m *PlaylistMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *PlaylistMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the Playlist entity.
-// If the Playlist object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PlaylistMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *PlaylistMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[playlist.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *PlaylistMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[playlist.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *PlaylistMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, playlist.FieldDeletedAt)
 }
 
 // SetUserID sets the "user" edge to the User entity by id.
@@ -437,6 +437,9 @@ func (m *PlaylistMutation) Type() string {
 // AddedFields().
 func (m *PlaylistMutation) Fields() []string {
 	fields := make([]string, 0, 4)
+	if m.deleted_at != nil {
+		fields = append(fields, playlist.FieldDeletedAt)
+	}
 	if m.name != nil {
 		fields = append(fields, playlist.FieldName)
 	}
@@ -446,9 +449,6 @@ func (m *PlaylistMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, playlist.FieldUpdatedAt)
 	}
-	if m.deleted_at != nil {
-		fields = append(fields, playlist.FieldDeletedAt)
-	}
 	return fields
 }
 
@@ -457,14 +457,14 @@ func (m *PlaylistMutation) Fields() []string {
 // schema.
 func (m *PlaylistMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case playlist.FieldDeletedAt:
+		return m.DeletedAt()
 	case playlist.FieldName:
 		return m.Name()
 	case playlist.FieldCreatedAt:
 		return m.CreatedAt()
 	case playlist.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case playlist.FieldDeletedAt:
-		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -474,14 +474,14 @@ func (m *PlaylistMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *PlaylistMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case playlist.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	case playlist.FieldName:
 		return m.OldName(ctx)
 	case playlist.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case playlist.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case playlist.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Playlist field %s", name)
 }
@@ -491,6 +491,13 @@ func (m *PlaylistMutation) OldField(ctx context.Context, name string) (ent.Value
 // type.
 func (m *PlaylistMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case playlist.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	case playlist.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -511,13 +518,6 @@ func (m *PlaylistMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
-		return nil
-	case playlist.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Playlist field %s", name)
@@ -577,6 +577,9 @@ func (m *PlaylistMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *PlaylistMutation) ResetField(name string) error {
 	switch name {
+	case playlist.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
 	case playlist.FieldName:
 		m.ResetName()
 		return nil
@@ -585,9 +588,6 @@ func (m *PlaylistMutation) ResetField(name string) error {
 		return nil
 	case playlist.FieldUpdatedAt:
 		m.ResetUpdatedAt()
-		return nil
-	case playlist.FieldDeletedAt:
-		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Playlist field %s", name)

@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"github.com/Pineapple217/Sortify/web/ent/schematype"
 )
 
 // Playlist holds the schema definition for the Playlist entity.
@@ -20,7 +21,6 @@ func (Playlist) Fields() []ent.Field {
 
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
-		field.Time("deleted_at").Optional().Nillable(),
 	}
 }
 
@@ -29,5 +29,11 @@ func (Playlist) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type).Ref("playlists").Unique(),
 		edge.To("tracks", Track.Type),
+	}
+}
+
+func (Playlist) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		schematype.SoftDeleteMixin{},
 	}
 }

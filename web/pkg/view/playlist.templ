@@ -9,20 +9,35 @@ templ PlaylistIndex(pls []*ent.Playlist) {
 	@boiler() {
 		<h1>Playlists</h1>
 		<table>
-			<tr>
-				<th>Nr</th>
-				<th>Title</th>
-				<th>Created at</th>
-				<th>View</th>
-			</tr>
-			for i, pl := range pls {
+			<thead>
 				<tr>
-					<td>{ strconv.Itoa(i + 1) }</td>
-					<td>{ pl.Name }</td>
-					<td>{ pl.CreatedAt.Format("2006-02-01 15:04:05") }</td>
-					<td><a href={ templ.URL("/playlist/" + strconv.FormatInt(int64(pl.ID), 10)) }>View</a></td>
+					<th>Nr</th>
+					<th>Title</th>
+					<th>Created at</th>
+					<th>View</th>
+					<th>Del</th>
 				</tr>
-			}
+			</thead>
+			<tbody
+				hx-disabled-elt="closest tr"
+				hx-target="closest tr"
+				hx-confirm="Are you sure?"
+				hx-swap="outerHTML"
+			>
+				for i, pl := range pls {
+					<tr>
+						<td>{ strconv.Itoa(i + 1) }</td>
+						<td>{ pl.Name }</td>
+						<td>{ pl.CreatedAt.Format("2006-01-02 15:04:05") }</td>
+						<td><a href={ templ.URL("/playlist/" + strconv.FormatInt(int64(pl.ID), 10)) }>View</a></td>
+						<td>
+							<button
+								hx-delete={ "/playlist/" + strconv.FormatInt(int64(pl.ID), 10) }
+							>del</button>
+						</td>
+					</tr>
+				}
+			</tbody>
 		</table>
 	}
 }

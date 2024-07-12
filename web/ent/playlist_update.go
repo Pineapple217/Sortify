@@ -30,26 +30,6 @@ func (pu *PlaylistUpdate) Where(ps ...predicate.Playlist) *PlaylistUpdate {
 	return pu
 }
 
-// SetName sets the "name" field.
-func (pu *PlaylistUpdate) SetName(s string) *PlaylistUpdate {
-	pu.mutation.SetName(s)
-	return pu
-}
-
-// SetNillableName sets the "name" field if the given value is not nil.
-func (pu *PlaylistUpdate) SetNillableName(s *string) *PlaylistUpdate {
-	if s != nil {
-		pu.SetName(*s)
-	}
-	return pu
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (pu *PlaylistUpdate) SetUpdatedAt(t time.Time) *PlaylistUpdate {
-	pu.mutation.SetUpdatedAt(t)
-	return pu
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (pu *PlaylistUpdate) SetDeletedAt(t time.Time) *PlaylistUpdate {
 	pu.mutation.SetDeletedAt(t)
@@ -67,6 +47,26 @@ func (pu *PlaylistUpdate) SetNillableDeletedAt(t *time.Time) *PlaylistUpdate {
 // ClearDeletedAt clears the value of the "deleted_at" field.
 func (pu *PlaylistUpdate) ClearDeletedAt() *PlaylistUpdate {
 	pu.mutation.ClearDeletedAt()
+	return pu
+}
+
+// SetName sets the "name" field.
+func (pu *PlaylistUpdate) SetName(s string) *PlaylistUpdate {
+	pu.mutation.SetName(s)
+	return pu
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (pu *PlaylistUpdate) SetNillableName(s *string) *PlaylistUpdate {
+	if s != nil {
+		pu.SetName(*s)
+	}
+	return pu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (pu *PlaylistUpdate) SetUpdatedAt(t time.Time) *PlaylistUpdate {
+	pu.mutation.SetUpdatedAt(t)
 	return pu
 }
 
@@ -138,7 +138,9 @@ func (pu *PlaylistUpdate) RemoveTracks(t ...*Track) *PlaylistUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (pu *PlaylistUpdate) Save(ctx context.Context) (int, error) {
-	pu.defaults()
+	if err := pu.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, pu.sqlSave, pu.mutation, pu.hooks)
 }
 
@@ -165,11 +167,15 @@ func (pu *PlaylistUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (pu *PlaylistUpdate) defaults() {
+func (pu *PlaylistUpdate) defaults() error {
 	if _, ok := pu.mutation.UpdatedAt(); !ok {
+		if playlist.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized playlist.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := playlist.UpdateDefaultUpdatedAt()
 		pu.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -194,17 +200,17 @@ func (pu *PlaylistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := pu.mutation.Name(); ok {
-		_spec.SetField(playlist.FieldName, field.TypeString, value)
-	}
-	if value, ok := pu.mutation.UpdatedAt(); ok {
-		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
-	}
 	if value, ok := pu.mutation.DeletedAt(); ok {
 		_spec.SetField(playlist.FieldDeletedAt, field.TypeTime, value)
 	}
 	if pu.mutation.DeletedAtCleared() {
 		_spec.ClearField(playlist.FieldDeletedAt, field.TypeTime)
+	}
+	if value, ok := pu.mutation.Name(); ok {
+		_spec.SetField(playlist.FieldName, field.TypeString, value)
+	}
+	if value, ok := pu.mutation.UpdatedAt(); ok {
+		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if pu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -300,26 +306,6 @@ type PlaylistUpdateOne struct {
 	mutation *PlaylistMutation
 }
 
-// SetName sets the "name" field.
-func (puo *PlaylistUpdateOne) SetName(s string) *PlaylistUpdateOne {
-	puo.mutation.SetName(s)
-	return puo
-}
-
-// SetNillableName sets the "name" field if the given value is not nil.
-func (puo *PlaylistUpdateOne) SetNillableName(s *string) *PlaylistUpdateOne {
-	if s != nil {
-		puo.SetName(*s)
-	}
-	return puo
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (puo *PlaylistUpdateOne) SetUpdatedAt(t time.Time) *PlaylistUpdateOne {
-	puo.mutation.SetUpdatedAt(t)
-	return puo
-}
-
 // SetDeletedAt sets the "deleted_at" field.
 func (puo *PlaylistUpdateOne) SetDeletedAt(t time.Time) *PlaylistUpdateOne {
 	puo.mutation.SetDeletedAt(t)
@@ -337,6 +323,26 @@ func (puo *PlaylistUpdateOne) SetNillableDeletedAt(t *time.Time) *PlaylistUpdate
 // ClearDeletedAt clears the value of the "deleted_at" field.
 func (puo *PlaylistUpdateOne) ClearDeletedAt() *PlaylistUpdateOne {
 	puo.mutation.ClearDeletedAt()
+	return puo
+}
+
+// SetName sets the "name" field.
+func (puo *PlaylistUpdateOne) SetName(s string) *PlaylistUpdateOne {
+	puo.mutation.SetName(s)
+	return puo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (puo *PlaylistUpdateOne) SetNillableName(s *string) *PlaylistUpdateOne {
+	if s != nil {
+		puo.SetName(*s)
+	}
+	return puo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (puo *PlaylistUpdateOne) SetUpdatedAt(t time.Time) *PlaylistUpdateOne {
+	puo.mutation.SetUpdatedAt(t)
 	return puo
 }
 
@@ -421,7 +427,9 @@ func (puo *PlaylistUpdateOne) Select(field string, fields ...string) *PlaylistUp
 
 // Save executes the query and returns the updated Playlist entity.
 func (puo *PlaylistUpdateOne) Save(ctx context.Context) (*Playlist, error) {
-	puo.defaults()
+	if err := puo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, puo.sqlSave, puo.mutation, puo.hooks)
 }
 
@@ -448,11 +456,15 @@ func (puo *PlaylistUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (puo *PlaylistUpdateOne) defaults() {
+func (puo *PlaylistUpdateOne) defaults() error {
 	if _, ok := puo.mutation.UpdatedAt(); !ok {
+		if playlist.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized playlist.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := playlist.UpdateDefaultUpdatedAt()
 		puo.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -494,17 +506,17 @@ func (puo *PlaylistUpdateOne) sqlSave(ctx context.Context) (_node *Playlist, err
 			}
 		}
 	}
-	if value, ok := puo.mutation.Name(); ok {
-		_spec.SetField(playlist.FieldName, field.TypeString, value)
-	}
-	if value, ok := puo.mutation.UpdatedAt(); ok {
-		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
-	}
 	if value, ok := puo.mutation.DeletedAt(); ok {
 		_spec.SetField(playlist.FieldDeletedAt, field.TypeTime, value)
 	}
 	if puo.mutation.DeletedAtCleared() {
 		_spec.ClearField(playlist.FieldDeletedAt, field.TypeTime)
+	}
+	if value, ok := puo.mutation.Name(); ok {
+		_spec.SetField(playlist.FieldName, field.TypeString, value)
+	}
+	if value, ok := puo.mutation.UpdatedAt(); ok {
+		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if puo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{

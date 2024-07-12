@@ -369,12 +369,14 @@ func (c *PlaylistClient) QueryTracks(pl *Playlist) *TrackQuery {
 
 // Hooks returns the client hooks.
 func (c *PlaylistClient) Hooks() []Hook {
-	return c.hooks.Playlist
+	hooks := c.hooks.Playlist
+	return append(hooks[:len(hooks):len(hooks)], playlist.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *PlaylistClient) Interceptors() []Interceptor {
-	return c.inters.Playlist
+	inters := c.inters.Playlist
+	return append(inters[:len(inters):len(inters)], playlist.Interceptors[:]...)
 }
 
 func (c *PlaylistClient) mutate(ctx context.Context, m *PlaylistMutation) (Value, error) {

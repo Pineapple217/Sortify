@@ -18,14 +18,14 @@ type Playlist struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// DeletedAt holds the value of the "deleted_at" field.
+	DeletedAt time.Time `json:"deleted_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// DeletedAt holds the value of the "deleted_at" field.
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PlaylistQuery when eager-loading is set.
 	Edges          PlaylistEdges `json:"edges"`
@@ -73,7 +73,7 @@ func (*Playlist) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case playlist.FieldName:
 			values[i] = new(sql.NullString)
-		case playlist.FieldCreatedAt, playlist.FieldUpdatedAt, playlist.FieldDeletedAt:
+		case playlist.FieldDeletedAt, playlist.FieldCreatedAt, playlist.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case playlist.ForeignKeys[0]: // user_playlists
 			values[i] = new(sql.NullInt64)
@@ -98,6 +98,12 @@ func (pl *Playlist) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			pl.ID = int(value.Int64)
+		case playlist.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				pl.DeletedAt = value.Time
+			}
 		case playlist.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -115,13 +121,6 @@ func (pl *Playlist) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				pl.UpdatedAt = value.Time
-			}
-		case playlist.FieldDeletedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
-			} else if value.Valid {
-				pl.DeletedAt = new(time.Time)
-				*pl.DeletedAt = value.Time
 			}
 		case playlist.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -176,6 +175,9 @@ func (pl *Playlist) String() string {
 	var builder strings.Builder
 	builder.WriteString("Playlist(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", pl.ID))
+	builder.WriteString("deleted_at=")
+	builder.WriteString(pl.DeletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(pl.Name)
 	builder.WriteString(", ")
@@ -184,11 +186,6 @@ func (pl *Playlist) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(pl.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	if v := pl.DeletedAt; v != nil {
-		builder.WriteString("deleted_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
 	builder.WriteByte(')')
 	return builder.String()
 }

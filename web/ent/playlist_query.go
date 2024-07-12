@@ -335,12 +335,12 @@ func (pq *PlaylistQuery) WithTracks(opts ...func(*TrackQuery)) *PlaylistQuery {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Playlist.Query().
-//		GroupBy(playlist.FieldName).
+//		GroupBy(playlist.FieldDeletedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (pq *PlaylistQuery) GroupBy(field string, fields ...string) *PlaylistGroupBy {
@@ -358,11 +358,11 @@ func (pq *PlaylistQuery) GroupBy(field string, fields ...string) *PlaylistGroupB
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		DeletedAt time.Time `json:"deleted_at,omitempty"`
 //	}
 //
 //	client.Playlist.Query().
-//		Select(playlist.FieldName).
+//		Select(playlist.FieldDeletedAt).
 //		Scan(ctx, &v)
 func (pq *PlaylistQuery) Select(fields ...string) *PlaylistSelect {
 	pq.ctx.Fields = append(pq.ctx.Fields, fields...)

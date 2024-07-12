@@ -24,6 +24,20 @@ type PlaylistCreate struct {
 	conflict []sql.ConflictOption
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (pc *PlaylistCreate) SetDeletedAt(t time.Time) *PlaylistCreate {
+	pc.mutation.SetDeletedAt(t)
+	return pc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pc *PlaylistCreate) SetNillableDeletedAt(t *time.Time) *PlaylistCreate {
+	if t != nil {
+		pc.SetDeletedAt(*t)
+	}
+	return pc
+}
+
 // SetName sets the "name" field.
 func (pc *PlaylistCreate) SetName(s string) *PlaylistCreate {
 	pc.mutation.SetName(s)
@@ -54,20 +68,6 @@ func (pc *PlaylistCreate) SetUpdatedAt(t time.Time) *PlaylistCreate {
 func (pc *PlaylistCreate) SetNillableUpdatedAt(t *time.Time) *PlaylistCreate {
 	if t != nil {
 		pc.SetUpdatedAt(*t)
-	}
-	return pc
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (pc *PlaylistCreate) SetDeletedAt(t time.Time) *PlaylistCreate {
-	pc.mutation.SetDeletedAt(t)
-	return pc
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (pc *PlaylistCreate) SetNillableDeletedAt(t *time.Time) *PlaylistCreate {
-	if t != nil {
-		pc.SetDeletedAt(*t)
 	}
 	return pc
 }
@@ -113,7 +113,9 @@ func (pc *PlaylistCreate) Mutation() *PlaylistMutation {
 
 // Save creates the Playlist in the database.
 func (pc *PlaylistCreate) Save(ctx context.Context) (*Playlist, error) {
-	pc.defaults()
+	if err := pc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, pc.sqlSave, pc.mutation, pc.hooks)
 }
 
@@ -140,15 +142,22 @@ func (pc *PlaylistCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (pc *PlaylistCreate) defaults() {
+func (pc *PlaylistCreate) defaults() error {
 	if _, ok := pc.mutation.CreatedAt(); !ok {
+		if playlist.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized playlist.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := playlist.DefaultCreatedAt()
 		pc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := pc.mutation.UpdatedAt(); !ok {
+		if playlist.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized playlist.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := playlist.DefaultUpdatedAt()
 		pc.mutation.SetUpdatedAt(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -194,6 +203,10 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 		_spec = sqlgraph.NewCreateSpec(playlist.Table, sqlgraph.NewFieldSpec(playlist.FieldID, field.TypeInt))
 	)
 	_spec.OnConflict = pc.conflict
+	if value, ok := pc.mutation.DeletedAt(); ok {
+		_spec.SetField(playlist.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = value
+	}
 	if value, ok := pc.mutation.Name(); ok {
 		_spec.SetField(playlist.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -205,10 +218,6 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 	if value, ok := pc.mutation.UpdatedAt(); ok {
 		_spec.SetField(playlist.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if value, ok := pc.mutation.DeletedAt(); ok {
-		_spec.SetField(playlist.FieldDeletedAt, field.TypeTime, value)
-		_node.DeletedAt = &value
 	}
 	if nodes := pc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -250,7 +259,7 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 // of the `INSERT` statement. For example:
 //
 //	client.Playlist.Create().
-//		SetName(v).
+//		SetDeletedAt(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -259,7 +268,7 @@ func (pc *PlaylistCreate) createSpec() (*Playlist, *sqlgraph.CreateSpec) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.PlaylistUpsert) {
-//			SetName(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (pc *PlaylistCreate) OnConflict(opts ...sql.ConflictOption) *PlaylistUpsertOne {
@@ -295,6 +304,24 @@ type (
 	}
 )
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *PlaylistUpsert) SetDeletedAt(v time.Time) *PlaylistUpsert {
+	u.Set(playlist.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *PlaylistUpsert) UpdateDeletedAt() *PlaylistUpsert {
+	u.SetExcluded(playlist.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *PlaylistUpsert) ClearDeletedAt() *PlaylistUpsert {
+	u.SetNull(playlist.FieldDeletedAt)
+	return u
+}
+
 // SetName sets the "name" field.
 func (u *PlaylistUpsert) SetName(v string) *PlaylistUpsert {
 	u.Set(playlist.FieldName, v)
@@ -316,24 +343,6 @@ func (u *PlaylistUpsert) SetUpdatedAt(v time.Time) *PlaylistUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *PlaylistUpsert) UpdateUpdatedAt() *PlaylistUpsert {
 	u.SetExcluded(playlist.FieldUpdatedAt)
-	return u
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *PlaylistUpsert) SetDeletedAt(v time.Time) *PlaylistUpsert {
-	u.Set(playlist.FieldDeletedAt, v)
-	return u
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *PlaylistUpsert) UpdateDeletedAt() *PlaylistUpsert {
-	u.SetExcluded(playlist.FieldDeletedAt)
-	return u
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *PlaylistUpsert) ClearDeletedAt() *PlaylistUpsert {
-	u.SetNull(playlist.FieldDeletedAt)
 	return u
 }
 
@@ -382,6 +391,27 @@ func (u *PlaylistUpsertOne) Update(set func(*PlaylistUpsert)) *PlaylistUpsertOne
 	return u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *PlaylistUpsertOne) SetDeletedAt(v time.Time) *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *PlaylistUpsertOne) UpdateDeletedAt() *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *PlaylistUpsertOne) ClearDeletedAt() *PlaylistUpsertOne {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *PlaylistUpsertOne) SetName(v string) *PlaylistUpsertOne {
 	return u.Update(func(s *PlaylistUpsert) {
@@ -407,27 +437,6 @@ func (u *PlaylistUpsertOne) SetUpdatedAt(v time.Time) *PlaylistUpsertOne {
 func (u *PlaylistUpsertOne) UpdateUpdatedAt() *PlaylistUpsertOne {
 	return u.Update(func(s *PlaylistUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *PlaylistUpsertOne) SetDeletedAt(v time.Time) *PlaylistUpsertOne {
-	return u.Update(func(s *PlaylistUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *PlaylistUpsertOne) UpdateDeletedAt() *PlaylistUpsertOne {
-	return u.Update(func(s *PlaylistUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *PlaylistUpsertOne) ClearDeletedAt() *PlaylistUpsertOne {
-	return u.Update(func(s *PlaylistUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 
@@ -566,7 +575,7 @@ func (pcb *PlaylistCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.PlaylistUpsert) {
-//			SetName(v+v).
+//			SetDeletedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (pcb *PlaylistCreateBulk) OnConflict(opts ...sql.ConflictOption) *PlaylistUpsertBulk {
@@ -642,6 +651,27 @@ func (u *PlaylistUpsertBulk) Update(set func(*PlaylistUpsert)) *PlaylistUpsertBu
 	return u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (u *PlaylistUpsertBulk) SetDeletedAt(v time.Time) *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *PlaylistUpsertBulk) UpdateDeletedAt() *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *PlaylistUpsertBulk) ClearDeletedAt() *PlaylistUpsertBulk {
+	return u.Update(func(s *PlaylistUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *PlaylistUpsertBulk) SetName(v string) *PlaylistUpsertBulk {
 	return u.Update(func(s *PlaylistUpsert) {
@@ -667,27 +697,6 @@ func (u *PlaylistUpsertBulk) SetUpdatedAt(v time.Time) *PlaylistUpsertBulk {
 func (u *PlaylistUpsertBulk) UpdateUpdatedAt() *PlaylistUpsertBulk {
 	return u.Update(func(s *PlaylistUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (u *PlaylistUpsertBulk) SetDeletedAt(v time.Time) *PlaylistUpsertBulk {
-	return u.Update(func(s *PlaylistUpsert) {
-		s.SetDeletedAt(v)
-	})
-}
-
-// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
-func (u *PlaylistUpsertBulk) UpdateDeletedAt() *PlaylistUpsertBulk {
-	return u.Update(func(s *PlaylistUpsert) {
-		s.UpdateDeletedAt()
-	})
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (u *PlaylistUpsertBulk) ClearDeletedAt() *PlaylistUpsertBulk {
-	return u.Update(func(s *PlaylistUpsert) {
-		s.ClearDeletedAt()
 	})
 }
 
