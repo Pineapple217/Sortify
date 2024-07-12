@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 	v "github.com/Pineapple217/Sortify/web/pkg/validate"
 	"github.com/Pineapple217/Sortify/web/pkg/view"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -101,14 +99,11 @@ func (h *Handler) SignupUser(c echo.Context) error {
 		return render(c, view.SignupForm(values, form_errors))
 	}
 	user, err := createUserFromFormValues(c.Request().Context(), h.DB, values)
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		// unique_violation
-		if pgErr.Code == "23505" {
-			form_errors.Add("username", "username is not available")
-			return render(c, view.SignupForm(values, form_errors))
-		}
-		return err
+	if ent.IsConstraintError(err) {
+		form_errors.Add("username", "username is not available")
+		return render(c, view.SignupForm(values, form_errors))
+	} else if err != nil {
+		panic(err)
 	}
 
 	s, err := h.DB.Session.Create().
